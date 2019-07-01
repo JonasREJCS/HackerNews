@@ -1,2 +1,0 @@
-# HackerNews
-Developed with ReactJs

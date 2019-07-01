@@ -1,161 +1,148 @@
 import React, { Component } from 'react';
 import './App.css';
 
-const filmes = require('./filmes')
+const DEFAULT_QUERY = 'redux';
+const DEFAULT_HPP = '100';
 
-
-
-//a versão funcional é stateless, teremos que mudar para Class Component para usar o state
-// function App() {
-
-//   function onDismiss(id) {
-//     const isNotIt = item => item.titulo !== id;      
-//     const updatedList = filmes.filter(isNotIt);
-//   };
-
-//   return (
-//     <div className="App">
-//       {filmes.map((item) => 
-
-//         <div key={item.titulo}>
-//           <span>{item.titulo}</span>
-//           <span> ({item.duracao} min)</span>
-//           <span>
-//             <button
-//             onClick={() => onDismiss(item.titulo)}
-//             type="button">
-//               Dismiss
-//             </button>
-//           </span>
-//           <div>
-//             {item.elenco.map((it) => 
-//               <h6>{it.nome} </h6>
-//             )}
-//           </div>
-
-//         </div>
-//         )
-//       }
-//     </div>
-//   );
-// }
-
-//high order function, função que retorna função
-const isSearched = searchTerm => item => item.titulo.toLowerCase().includes(searchTerm.toLowerCase());
+const PATH_BASE = 'http://hn.algolia.com/api/v1';
+const PATH_SEARCH = '/search';
+const PARAM_SEARCH = 'query=';
+const PARAM_PAGE = 'page=';
+const PARAM_HPP = 'hitsPerPage=';
 
 class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      filmes: filmes,
-      searchTerm: '',
+      result: null,
+      searchTerm: DEFAULT_QUERY,
     };
 
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.setSearchTopStories = this.setSearchTopStories.bind(this);
+    this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
   }
 
+  setSearchTopStories(result) {
+    const { hits, page } = result;
+    const oldHits = page !== 0
+      ? this.state.result.hits
+      : [];
+    const updatedHits = [
+      ...oldHits,
+      ...hits
+    ];
+    this.setState({
+      result: { hits: updatedHits, page }
+    });
+  }
+
+  fetchSearchTopStories(searchTerm, page = 0) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
+      .then(response => response.json())
+      .then(result => this.setSearchTopStories(result))
+      .catch(error => error);
+  }
+
+  componentDidMount() {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopStories(searchTerm);
+  }
 
   onDismiss(id) {
-    const isNotId = item => item.id !== id;
-    const updatedList = this.state.filmes.filter(isNotId);
-    this.setState({ filmes: updatedList });
+    const isNotId = item => item.objectID !== id;
+    const updatedHits = this.state.result.hits.filter(isNotId);
+    this.setState({
+      result: { ...this.state.result, hits: updatedHits }
+    });
   }
 
   onSearchChange(event) {
     this.setState({ searchTerm: event.target.value });
   }
 
-  //This code was split into three components: App that render the Table and Search components
-  // render() {
-  //   //usa ES6 Destructuring para pegar as propriedades do state
-  //   const {searchTerm, filmes} = this.state;
-  //   return (
-  //     <div className="App" >
-  //       <form>
-  //         <input 
-  //         type="text"
-  //         //add value attribute so that inputText becomes a controlled component by React
-  //         value={searchTerm}
-  //         onChange={this.onSearchChange}
-  //         />
-  //       </form>
-
-
-  //       {filmes.filter(isSearched(searchTerm)).map((item) => 
-
-  //           <div key={item.id}>
-  //             <span>{item.titulo}</span>
-  //             <span> ({item.duracao} min)</span>
-  //             <span>
-  //               <button
-  //                 onClick={() => this.onDismiss(item.id)}
-  //                 type="button">
-  //                 Dismiss
-  //               </button>
-  //             </span>
-  //             <div>
-  //               {item.elenco.map((it) =>
-  //                 <h6>{it.nome} </h6>
-  //               )}
-  //             </div>
-
-  //           </div>
-  //       )
-  //       }
-  //     </div>
-  //   );
-  // }
+  onSearchSubmit(event) {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopStories(searchTerm);
+    event.preventDefault();
+  }
 
   render() {
-    const { searchTerm, filmes } = this.state;
+    const { searchTerm, result } = this.state;
+    const page = (result && result.page) || 0;
     return (
-      <div  className="page">
+      <div className="page">
         <div className="interactions">
-        <Search
-          value={searchTerm}
-          onChange={this.onSearchChange}>
-          Search:
+          <Search
+            value={searchTerm}
+            onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
+          >
+            Search:
         </Search>
         </div>
-        <Table
-          filmes={filmes}
-          pattern={searchTerm}
-          onDismiss={this.onDismiss}
-        />
+        {result
+          && <Table
+            list={result.hits}
+            onDismiss={this.onDismiss}
+          />
+        }
+        <div className="interactions">
+          <Button onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}>
+            More
+          </Button>
+        </div>
       </div>
     );
   }
 
 }
 
-const Search = ({ value, onChange, children }) =>
-  <form>
-    {children}<input
+const Search = ({
+  value,
+  onChange,
+  onSubmit,
+  children
+}) =>
+  <form onSubmit={onSubmit}>
+    <input
       type="text"
       value={value}
       onChange={onChange}
     />
+    <button type="submit">
+      {children}
+    </button>
   </form>
 
 
-const Table = ({ filmes, pattern, onDismiss }) =>
+const Table = ({ list, onDismiss }) =>
   <div className="table">
-    {filmes.filter(isSearched(pattern)).map(item =>
-      <div key={item.id} className="table-row">
-        <span style={{width: '80%'}}>{item.titulo} </span>
+    {list.map(item =>
+      <div key={item.objectID} className="table-row">
+        <span style={{ width: '40%' }}>
+          <a href={item.url}>{item.title}</a>
+        </span>
+        <span style={{ width: '30%' }}>
+          {item.author}
+        </span>
+        <span style={{ width: '10%' }}>
+          {item.num_comments}
+        </span>
+        <span style={{ width: '10%' }}>
+          {item.points}
+        </span>
+        <span style={{ width: '10%' }}>
           <Button
-            onClick={() => onDismiss(item.id)}
+            onClick={() => onDismiss(item.objectID)}
             className="button-inline"
-            >
+          >
             Dismiss
-              </Button>
-        <div style={{width: '20%'}}>
-          {item.elenco.map((it) =>
-            <h6>{it.nome} </h6>
-          )}
-        </div>
+</Button>
+        </span>
       </div>
     )}
   </div>

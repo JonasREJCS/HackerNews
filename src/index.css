@@ -1,0 +1,46 @@
+body {
+  color: #222;
+  background: whitesmoke;
+  font: 400 14px CoreSans, Arial, sans-serif;
+
+}
+
+a {
+  color: #222;
+}
+
+a:hover{
+  text-decoration: underline;
+}
+
+ul, li{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+input{
+  padding: 10px;
+  border-radius: 5px;
+  outline: none;
+  margin-right: 10px;
+  border: 1px solid #dddddd
+}
+
+button{
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #dddddd;
+  background: transparent;
+  color: #808080;
+  cursor: pointer;
+}
+
+button:hover{
+  color:  darkred;
+}
+
+*:focus{
+  outline: none;
+}
+

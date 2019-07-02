@@ -15,7 +15,7 @@ class App extends Component {
     super(props);
 
     this.state = {
-      result: null,
+      results: null,
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
     };
@@ -74,7 +74,7 @@ class App extends Component {
     const updatedHits = hits.filter(isNotId);
 
     this.setState({
-      result: { ...results,
+      results: { ...results,
         [searchKey]: { hits: updatedHits, page }
        }
     });
@@ -120,7 +120,7 @@ class App extends Component {
             onChange={this.onSearchChange}
             onSubmit={this.onSearchSubmit}
           >
-            Search:
+            Search
         </Search>
         </div>
         <Table

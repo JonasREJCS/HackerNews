@@ -1,6 +1,6 @@
 body {
   color: #222;
-  background: whitesmoke;
+  background: rgb(217, 244, 255);
   font: 400 14px CoreSans, Arial, sans-serif;
 
 }
@@ -31,13 +31,13 @@ button{
   padding: 10px;
   border-radius: 5px;
   border: 1px solid #dddddd;
-  background: transparent;
+  background: white;
   color: #808080;
   cursor: pointer;
 }
 
 button:hover{
-  color:  darkred;
+  color:  blue  ;
 }
 
 *:focus{
